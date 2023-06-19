@@ -5,6 +5,7 @@ import { FaFacebookF, FaQuoteLeft, FaTwitter } from "react-icons/fa";
 function App() {
   const [quote, setQuote] = useState();
   const [color, setColor] = useState("5f9ea0");
+  const [loading, setLoading] = useState(true);
 
   const generateColor = () => {
     setColor(Math.random().toString(16).substr(-6));
@@ -17,18 +18,29 @@ function App() {
       },
     })
       .then((response) => response.json())
-      .then((data) => setQuote(data));
+      .then((data) => setQuote(data))
+      .finally(() => {
+        setLoading(false);
+      });
   };
 
   useEffect(() => {
-    fetch("https://api.api-ninjas.com/v1/quotes?category=inspirational", {
-      headers: {
-        "X-Api-Key": "lzdKQxwcIwVGjvjr2dDFXA==J38lXvsBuxdONftJ",
-      },
-    })
-      .then((response) => response.json())
-      .then((data) => setQuote(data));
-  }, []);
+    if (!quote) {
+      fetch("https://api.api-ninjas.com/v1/quotes?category=inspirational", {
+        headers: {
+          "X-Api-Key": "lzdKQxwcIwVGjvjr2dDFXA==J38lXvsBuxdONftJ",
+        },
+      })
+        .then((response) => response.json())
+        .then((data) => setQuote(data))
+        .catch((err) => {
+          console.log(err.message);
+        })
+        .finally(() => {
+          setLoading(false);
+        });
+    }
+  });
   console.log(quote);
 
   const styles = {
@@ -43,16 +55,22 @@ function App() {
     <div className="App" style={styles.back}>
       <div id="quote-box">
         {/* Quote */}
-        <div className="quote" style={styles.color}>
-          <span>
-            {" "}
-            <FaQuoteLeft />
-          </span>{" "}
-          {quote[0].quote}
-        </div>
-        <div className="author">
-          <p style={styles.color}> - {quote[0].author}</p>
-        </div>
+        {quote?.map((item) => {
+          return (
+            <>
+              <div key={item.author} className="quote" style={styles.color}>
+                <span>
+                  {" "}
+                  <FaQuoteLeft />
+                </span>{" "}
+                {!loading ? item.quote : "loading"}
+              </div>
+              <div className="author">
+                <p style={styles.color}> - {item.author}</p>
+              </div>
+            </>
+          );
+        })}
         <div className="share">
           <div className="socials">
             <a href="/" style={styles.back}>
@@ -71,6 +89,7 @@ function App() {
               generateColor();
               getQuote();
               console.log(quote);
+              console.log(loading);
             }}
             id="new-quote"
           >
